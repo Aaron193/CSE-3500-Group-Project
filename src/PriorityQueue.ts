@@ -1,11 +1,11 @@
-type TComparator<T> = (a: T, b: T) => boolean;
+type Comparator<T> = (a: T, b: T) => boolean;
 
 export class PriorityQueue<T> {
     list: T[];
     size: number;
-    comparator: TComparator<T>;
+    comparator: Comparator<T>;
 
-    constructor(comparison: TComparator<T>) {
+    constructor(comparison: Comparator<T>) {
         this.list = [];
         this.size = 0;
         this.comparator = comparison;
