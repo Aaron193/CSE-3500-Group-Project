@@ -1,5 +1,5 @@
 import { AStarGrid, TileType } from './AStarGrid';
-import { PriorityQueue } from './heap';
+import { PriorityQueue } from './PriorityQueue';
 
 export interface Vec2 {
     x: number;
