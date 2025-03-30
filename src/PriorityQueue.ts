@@ -1,14 +1,18 @@
 type Comparator<T> = (a: T, b: T) => boolean;
 
-export class PriorityQueue<T> {
-    list: T[];
-    size: number;
+export class PriorityQueue<T extends object> {
+    private list: T[];
+    private size: number;
     comparator: Comparator<T>;
 
     constructor(comparison: Comparator<T>) {
         this.list = [];
         this.size = 0;
         this.comparator = comparison;
+    }
+
+    public getSize() {
+        return this.size;
     }
 
     /**
@@ -45,6 +49,10 @@ export class PriorityQueue<T> {
         return element;
     }
 
+    /**
+     *
+     * @returns the next element to be extracted without actually extracting it
+     */
     public peek(): T | null {
         return this.list[0] || null;
     }
@@ -67,6 +75,12 @@ export class PriorityQueue<T> {
             this.swap(index, current);
             this.heapify(current);
         }
+    }
+
+    // TODO: possible optimization is to also keep track of a set of items for O(1) loopup
+    // This includes() is O(n) on the list
+    public has(item: T): boolean {
+        return this.list.includes(item);
     }
 
     private parent(index: number) {
