@@ -1,7 +1,6 @@
 import './assets/style.css';
 import { AStarGrid } from './AStarGrid';
 import { AStarPathfinder, HeuristicType } from './AStarPathfinder';
-import { PriorityQueue } from './PriorityQueue';
 // import viteLogo from '/vite.svg';
 
 const canvas = document.getElementById('canvas') as HTMLCanvasElement;
@@ -13,7 +12,7 @@ ctx.fillRect(0, 0, canvas.width, canvas.height);
 console.log('Hello from main.ts');
 
 // tiles spawn left to right
-const TILES = 25;
+const TILES = 50;
 
 const grid = new AStarGrid(TILES, TILES);
 const finder = new AStarPathfinder(grid, HeuristicType.MANHATTAN);
@@ -21,9 +20,10 @@ const finder = new AStarPathfinder(grid, HeuristicType.MANHATTAN);
 const start = { x: 0, y: 0 };
 const end = { x: TILES - 1, y: TILES - 1 };
 
-for (let i = 0; i < 100; i++) {
+for (let i = 0; i < TILES * TILES * 0.3; i++) {
     const x = Math.floor(Math.random() * TILES);
     const y = Math.floor(Math.random() * TILES);
+    if (x === start.x && y === start.y) continue;
     grid.setObstacle({ x, y });
 }
 

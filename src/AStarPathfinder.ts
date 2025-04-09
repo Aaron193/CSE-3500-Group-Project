@@ -44,7 +44,7 @@ export class AStarPathfinder {
 
         while (openSet.getSize() > 0) {
             // get lowest f node from the openSet (this is why we're using a min-heap)
-            const current = openSet.peek() as AStarNode;
+            const current = openSet.extract() as AStarNode;
 
             // If we found the end node, return the path
             if (current.position.x === end.x && current.position.y === end.y) {
@@ -52,9 +52,6 @@ export class AStarPathfinder {
                 return path;
             }
 
-            // remove the current node from the openSet
-            // CHECK: !! Do we need to remove all instances of this node?? !!
-            openSet.extract();
             // we are done evaluating this
             closedSet.add(current);
 
@@ -73,19 +70,23 @@ export class AStarPathfinder {
                     // if we have a better g value, update it
                     if (tempG < neighbor.g) {
                         neighbor.g = tempG;
+                        neighbor.f = tempG + neighbor.h;
+                        neighbor.parent = current;
+                        // we must update the priority queue after changing the f value
+                        openSet.updatePriority(neighbor);
                     }
                 } else {
                     // first time we are evaluating this node
                     neighbor.g = tempG;
+                    neighbor.h = this.heuristic(neighbor.position, end);
+                    neighbor.f = neighbor.g + neighbor.h;
+                    neighbor.parent = current;
                     openSet.insert(neighbor);
                 }
-
-                // update h & f, set parent as the current node (bc: current -> neighbor)
-                neighbor.h = this.heuristic(neighbor.position, end);
-                neighbor.f = neighbor.g + neighbor.h;
-                neighbor.parent = current;
             }
         }
+
+        return [];
     }
 
     private reconstructPath(node: AStarNode): Vec2[] {
