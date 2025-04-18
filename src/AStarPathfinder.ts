@@ -28,12 +28,12 @@ export class AStarPathfinder {
     // A* https://en.wikipedia.org/wiki/A*_search_algorithm
     findPath(start: Vec2, end: Vec2) {
         if (this.grid.getNode(start).isObstacle || this.grid.getNode(end).isObstacle) {
-            throw new Error('ERROR findPath: start or end is an obstacle');
+            throw new Error('findPath: start or end is an obstacle');
         }
 
         // nodes that have already been evaluated
         const closedSet = new Set<AStarNode>();
-
+        // nodes that have not yet been evaluated
         const openSet = new PriorityQueue<AStarNode>((a: AStarNode, b: AStarNode) => a.f < b.f);
 
         // g = 0 because distance from the start is zero (this *is* the start)
@@ -64,20 +64,20 @@ export class AStarPathfinder {
                     continue;
                 }
 
-                const tempG = current.g + this.heuristic(current.position, neighbor.position);
+                const tentativeG = current.g + this.heuristic(current.position, neighbor.position);
                 // if we've already evaluated this node
                 if (openSet.has(neighbor)) {
                     // if we have a better g value, update it
-                    if (tempG < neighbor.g) {
-                        neighbor.g = tempG;
-                        neighbor.f = tempG + neighbor.h;
+                    if (tentativeG < neighbor.g) {
+                        neighbor.g = tentativeG;
+                        neighbor.f = tentativeG + neighbor.h;
                         neighbor.parent = current;
                         // we must update the priority queue after changing the f value
                         openSet.updatePriority(neighbor);
                     }
                 } else {
                     // first time we are evaluating this node
-                    neighbor.g = tempG;
+                    neighbor.g = tentativeG;
                     neighbor.h = this.heuristic(neighbor.position, end);
                     neighbor.f = neighbor.g + neighbor.h;
                     neighbor.parent = current;
@@ -86,6 +86,65 @@ export class AStarPathfinder {
             }
         }
 
+        // no path found
+        return [];
+    }
+
+    /**
+     * Identical to findPath, however this uses a step-by-step generator
+     * which allows us to animate each part of the process
+     */
+    public *findPathGenerator(start: Vec2, end: Vec2): Generator<{ current?: AStarNode; open: AStarNode[]; closed: AStarNode[] }, Vec2[], undefined> {
+        if (this.grid.getNode(start).isObstacle || this.grid.getNode(end).isObstacle) {
+            throw new Error('findPath: start or end is an obstacle');
+        }
+
+        const closedSet = new Set<AStarNode>();
+        const openPQ = new PriorityQueue<AStarNode>((a, b) => a.f < b.f);
+
+        const startNode = new AStarNode(start, 0, this.heuristic(start, end), null);
+        openPQ.insert(startNode);
+
+        while (openPQ.getSize() > 0) {
+            const current = openPQ.extract() as AStarNode;
+            closedSet.add(current);
+
+            // send back the current state of the algorithm
+            yield {
+                current,
+                open: openPQ.items(),
+                closed: Array.from(closedSet),
+            };
+
+            // we have reached our goal
+            if (current.position.x === end.x && current.position.y === end.y) {
+                const path = this.reconstructPath(current);
+                return path;
+            }
+
+            for (const neighbor of this.grid.getNeighbors(current)) {
+                if (neighbor.isObstacle || closedSet.has(neighbor)) continue;
+
+                const tentativeG = current.g + this.heuristic(current.position, neighbor.position);
+
+                if (openPQ.has(neighbor)) {
+                    if (tentativeG < neighbor.g) {
+                        neighbor.g = tentativeG;
+                        neighbor.f = tentativeG + neighbor.h;
+                        neighbor.parent = current;
+                        openPQ.updatePriority(neighbor);
+                    }
+                } else {
+                    neighbor.g = tentativeG;
+                    neighbor.h = this.heuristic(neighbor.position, end);
+                    neighbor.f = neighbor.g + neighbor.h;
+                    neighbor.parent = current;
+                    openPQ.insert(neighbor);
+                }
+            }
+        }
+
+        // no path found
         return [];
     }
 

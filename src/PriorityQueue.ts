@@ -101,6 +101,14 @@ export class PriorityQueue<T extends object> {
     }
 
     /**
+     * Copy the items in the queue into a new array
+     * O(n)
+     */
+    public items(): T[] {
+        return this.list.slice();
+    }
+
+    /**
      * Restore heap property by moving the item up the tree
      * O(log n)
      */

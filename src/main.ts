@@ -1,7 +1,6 @@
 import './assets/style.css';
 import { AStarGrid } from './AStarGrid';
-import { AStarPathfinder, HeuristicType } from './AStarPathfinder';
-// import viteLogo from '/vite.svg';
+import { AStarPathfinder, HeuristicType, Vec2 } from './AStarPathfinder';
 
 const canvas = document.getElementById('canvas') as HTMLCanvasElement;
 const ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
@@ -9,29 +8,36 @@ const ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
 ctx.fillStyle = 'black';
 ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-console.log('Hello from main.ts');
-
-// tiles spawn left to right
 const TILES = 50;
-
-const grid = new AStarGrid(TILES, TILES);
-const finder = new AStarPathfinder(grid, HeuristicType.MANHATTAN);
-
 const start = { x: 0, y: 0 };
 const end = { x: TILES - 1, y: TILES - 1 };
 
-for (let i = 0; i < TILES * TILES * 0.3; i++) {
-    const x = Math.floor(Math.random() * TILES);
-    const y = Math.floor(Math.random() * TILES);
-    if (x === start.x && y === start.y) continue;
-    grid.setObstacle({ x, y });
+/**
+ * Create obstacle grid while ensuring a valid path exists
+ */
+function createObstacleGrid(): AStarGrid {
+    let grid: AStarGrid;
+    let path: Vec2[];
+
+    do {
+        grid = new AStarGrid(TILES, TILES);
+        for (let i = 0; i < TILES * TILES * 0.3; i++) {
+            const x = Math.floor(Math.random() * TILES);
+            const y = Math.floor(Math.random() * TILES);
+            if ((x === start.x && y === start.y) || (x === end.x && y === end.y)) continue;
+            grid.setObstacle({ x, y });
+        }
+        const testPf = new AStarPathfinder(grid, HeuristicType.MANHATTAN);
+        path = testPf.findPath(start, end);
+    } while (path.length === 0);
+
+    return grid;
 }
 
-const path = finder.findPath(start, end)!;
+const grid = createObstacleGrid();
+const pathfinder = new AStarPathfinder(grid, HeuristicType.MANHATTAN);
+const generator = pathfinder.findPathGenerator(start, end);
 
-console.log('PATH', path);
-
-// draw the grid
 const tileWidth = canvas.width / TILES;
 const tileHeight = canvas.height / TILES;
 const tileSize = Math.min(tileWidth, tileHeight);
@@ -51,23 +57,8 @@ const drawGrid = () => {
     }
 };
 
-const drawPath = () => {
-    // draw lines
-    ctx.strokeStyle = 'blue';
-    ctx.lineWidth = tileSize / 2;
-    ctx.beginPath();
-    ctx.moveTo(tileOffsetX + start.x * tileSize + tileSize / 2, tileOffsetY + start.y * tileSize + tileSize / 2);
-    for (const node of path) {
-        const x = tileOffsetX + node.x * tileSize + tileSize / 2;
-        const y = tileOffsetY + node.y * tileSize + tileSize / 2;
-        ctx.lineTo(x, y);
-    }
-    ctx.lineTo(tileOffsetX + end.x * tileSize + tileSize / 2, tileOffsetY + end.y * tileSize + tileSize / 2);
-    ctx.stroke();
-};
-
 const drawObstacles = () => {
-    ctx.fillStyle = 'red';
+    ctx.fillStyle = 'black';
     for (let x = 0; x < TILES; x++) {
         for (let y = 0; y < TILES; y++) {
             const tileX = tileOffsetX + x * tileSize;
@@ -85,18 +76,74 @@ const drawStartEnd = () => {
     const startY = tileOffsetY + start.y * tileSize;
     ctx.fillRect(startX, startY, tileSize, tileSize);
 
-    ctx.fillStyle = 'yellow';
+    ctx.fillStyle = 'purple';
     const endX = tileOffsetX + end.x * tileSize;
     const endY = tileOffsetY + end.y * tileSize;
     ctx.fillRect(endX, endY, tileSize, tileSize);
 };
 
-const draw = () => {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    drawGrid();
-    drawObstacles();
-    drawPath();
-    drawStartEnd();
-};
+let SPEED_MULTIPLIER = 1;
 
-draw();
+function tick() {
+    let _step = generator.next();
+
+    for (let i = 1; i < SPEED_MULTIPLIER; i++) {
+        if (_step.done) break;
+        _step = generator.next();
+    }
+
+    const step = _step;
+
+    if (!step.done) {
+        const { current, open = [], closed = [] } = step.value || {};
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        drawGrid();
+        drawObstacles();
+
+        // draw closed set
+        closed.forEach(node => {
+            const x = tileOffsetX + node.position.x * tileSize;
+            const y = tileOffsetY + node.position.y * tileSize;
+            ctx.fillStyle = 'rgba(255,0,0,0.5)';
+            ctx.fillRect(x, y, tileSize, tileSize);
+        });
+
+        // draw open set
+        open.forEach(node => {
+            const x = tileOffsetX + node.position.x * tileSize;
+            const y = tileOffsetY + node.position.y * tileSize;
+            ctx.fillStyle = 'rgba(0,0,255,0.5)';
+            ctx.fillRect(x, y, tileSize, tileSize);
+        });
+
+        // draw our current node being evaluated
+        if (current) {
+            const x = tileOffsetX + current.position.x * tileSize;
+            const y = tileOffsetY + current.position.y * tileSize;
+            ctx.fillStyle = 'yellow';
+            ctx.fillRect(x, y, tileSize, tileSize);
+        }
+
+        drawStartEnd();
+        requestAnimationFrame(tick);
+    } else {
+        // we found a path. Draw it.
+        const path = step.value || [];
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        drawGrid();
+        drawObstacles();
+        drawStartEnd();
+
+        // draw the final path
+        ctx.fillStyle = 'rgba(0,255,0,0.5)';
+        path.forEach(node => {
+            const x = tileOffsetX + node.x * tileSize;
+            const y = tileOffsetY + node.y * tileSize;
+            ctx.fillRect(x, y, tileSize, tileSize);
+        });
+    }
+}
+
+tick();
