@@ -12,6 +12,8 @@ const TILES = 50;
 const start = { x: 0, y: 0 };
 const end = { x: TILES - 1, y: TILES - 1 };
 
+const PERCENTAGE_OBSTACLES = 0.3;
+
 /**
  * Create obstacle grid while ensuring a valid path exists
  */
@@ -21,7 +23,7 @@ function createObstacleGrid(): AStarGrid {
 
     do {
         grid = new AStarGrid(TILES, TILES);
-        for (let i = 0; i < TILES * TILES * 0.3; i++) {
+        for (let i = 0; i < TILES * TILES * PERCENTAGE_OBSTACLES; i++) {
             const x = Math.floor(Math.random() * TILES);
             const y = Math.floor(Math.random() * TILES);
             if ((x === start.x && y === start.y) || (x === end.x && y === end.y)) continue;
@@ -82,7 +84,7 @@ const drawStartEnd = () => {
     ctx.fillRect(endX, endY, tileSize, tileSize);
 };
 
-let SPEED_MULTIPLIER = 1;
+let SPEED_MULTIPLIER = 10;
 
 function tick() {
     let _step = generator.next();
