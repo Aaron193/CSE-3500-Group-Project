@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-    base: './',
+    base: '/CSE-3500-Group-Project/',
     build: {
         outDir: 'dist',
     },
