@@ -16,14 +16,34 @@
             crossorigin="anonymous"
         ></script>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Vite + TS</title>
+        <title>A* Visualization</title>
     </head>
-    <body>
+    <body class="bg-dark text-light">
         <div id="app">
+            <h1 class="text-center my-3">A* Pathfinding Visualization</h1>
+            <div class="controls my-3 d-flex justify-content-center align-items-center gap-2">
+                <!-- Number of Tiles -->
+                <label class="mb-0">Tiles:</label>
+                <input id="grid_size" type="number" min="5" max="50" value="25" class="form-control form-control-sm" style="width: 4em" />
+
+                <!-- Randomize the Grid -->
+                <button id="randomize" class="btn btn-primary btn-sm">Randomize</button>
+
+                <!-- Start/Stop the animation -->
+                <button id="start_stop" class="btn btn-success btn-sm">Start</button>
+
+                <!-- Change speed of the animation -->
+                <label class="mb-0">Speed:</label>
+                <input id="speed" type="range" min="1" max="10" value="1" class="form-range" style="width: 6em" />
+                <span id="speed_display" class="badge bg-secondary">1x</span>
+                <!-- Path length -->
+                <span id="path_length" class="badge bg-primary">Path Length: 0</span>
+            </div>
+
             <div class="container d-flex justify-content-center">
                 <canvas id="canvas" width="1000" height="750"></canvas>
             </div>
         </div>
-        <script type="module" src="/src/main.ts"></script>
+        <script type="module" src="/src/driver/main.ts"></script>
     </body>
 </html>
