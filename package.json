@@ -6,7 +6,7 @@
     "scripts": {
         "dev": "vite",
         "build": "tsc && vite build",
-        "preview": "vite preview",
+        "preview": "vite preview --base=/CSE-3500-Group-Project/",
         "test": "jest --passWithNoTests",
         "test:watch": "jest --watch",
         "deploy": "npm run build && gh-pages -d dist"
