@@ -26,7 +26,7 @@ export class AStarPathfinder {
     }
 
     // A* https://en.wikipedia.org/wiki/A*_search_algorithm
-    findPath(start: Vec2, end: Vec2) {
+    findPath(start: Vec2, end: Vec2): Vec2[] {
         if (this.grid.getNode(start).isObstacle || this.grid.getNode(end).isObstacle) {
             throw new Error('findPath: start or end is an obstacle');
         }

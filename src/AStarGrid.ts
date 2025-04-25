@@ -1,6 +1,5 @@
 import { Vec2 } from './AStarPathfinder';
 import { AStarNode } from './AStarNode';
-
 export class AStarGrid {
     width: number;
     height: number;
