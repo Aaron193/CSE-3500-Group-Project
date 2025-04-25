@@ -126,8 +126,21 @@ function drawCurrentState() {
     drawStartEnd();
 }
 
+let prevUpdate = 0;
+
 function tick() {
     if (!isRunning) return;
+
+    const now = Date.now();
+    const delta = (now - prevUpdate) / 1000; // in seconds
+
+    // run simulation at 60 Hz no matter what native monitor refresh rate is
+    if (delta < 1 / 60) {
+        requestAnimationFrame(tick);
+        return;
+    }
+
+    prevUpdate = now;
 
     let step = generator.next();
 
